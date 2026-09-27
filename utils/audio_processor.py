@@ -1,6 +1,7 @@
 import yt_dlp
 from pydub import AudioSegment
 import os
+import tempfile 
 
 
 DOWNLOAD_DIR = 'downloads'
@@ -8,6 +9,17 @@ os.makedirs(DOWNLOAD_DIR,exist_ok=True)
 
 
 
+try:
+    import streamlit as st
+    _cookie_data = st.secrets.get("YOUTUBE_COOKIES")
+except Exception:
+    _cookie_data = os.getenv("YOUTUBE_COOKIES")
+
+COOKIE_FILE = None
+if _cookie_data:
+    COOKIE_FILE = os.path.join(tempfile.gettempdir(), "cookies.txt")
+    with open(COOKIE_FILE, "w") as f:
+        f.write(_cookie_data)
 
 
 def download_youtube_audio(url: str) -> str:
@@ -27,22 +39,40 @@ def download_youtube_audio(url: str) -> str:
             }
         ],
         "quiet": True,
+        "restrictfilenames": True,
         "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
         "http_headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
         },
     }
 
+    if COOKIE_FILE:
+        ydl_opts["cookiefile"] = COOKIE_FILE
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
-
-        filename = (
-            ydl.prepare_filename(info)
-            .replace(".webm", ".wav")
-            .replace(".m4a", ".wav")
-        )
+        raw_path = ydl.prepare_filename(info)
+        filename = os.path.splitext(raw_path)[0] + ".wav"
 
     return filename
+
+    # with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    #     info = ydl.extract_info(url, download=True)
+
+    #     filename = (
+    #         ydl.prepare_filename(info)
+    #         .replace(".webm", ".wav")
+    #         .replace(".m4a", ".wav")
+    #     )
+
+    # return filename
+
+    # with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+    #     info = ydl.extract_info(url, download=True)
+    #     raw_path = ydl.prepare_filename(info)
+    #     filename = os.path.splitext(raw_path)[0] + ".wav"
+
+    # return filename
 
 
 
