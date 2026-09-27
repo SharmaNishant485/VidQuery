@@ -21,6 +21,11 @@ if _cookie_data:
     with open(COOKIE_FILE, "w") as f:
         f.write(_cookie_data)
 
+print(f"[DEBUG] Cookie data found: {_cookie_data is not None}")
+print(f"[DEBUG] Cookie file path: {COOKIE_FILE}")
+if COOKIE_FILE:
+    print(f"[DEBUG] Cookie file size: {os.path.getsize(COOKIE_FILE)} bytes")
+
 
 def download_youtube_audio(url: str) -> str:
     output_path = os.path.join(
